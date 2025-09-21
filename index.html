@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Best Friends Quiz — Dosti Ka Test</title>
+<style>
+:root{
+  --bg1:#0f172a; --bg2:#1e293b; --accent:#f59e0b; --success:#10b981; --danger:#ef4444;
+  --text:#e5eef7; --muted:#94a3b8;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:Inter,system-ui,Segoe UI,Arial; color:var(--text);
+  background:
+    radial-gradient(700px 400px at 15% 85%, rgba(245,158,11,.10), transparent),
+    radial-gradient(700px 400px at 85% 15%, rgba(16,185,129,.08), transparent),
+    linear-gradient(135deg,var(--bg1),var(--bg2));
+  display:flex; align-items:center; justify-content:center; padding:18px;
+}
+.card{
+  width:min(900px,96vw); background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10); border-radius:18px; padding:22px;
+  box-shadow:0 18px 44px rgba(2,6,23,.5); position:relative; overflow:hidden; text-align:center;
+  backdrop-filter:saturate(1.2) blur(10px);
+}
+.header{margin-bottom:10px}
+.title{
+  font-weight:900; font-size:1.8rem; margin:0 0 6px;
+  background:linear-gradient(120deg,var(--accent),var(--success));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.sub{color:var(--muted); font-size:.95rem}
+.gif-wrap{border-radius:14px; overflow:hidden; background:#000; margin:14px 0; max-height:380px}
+.gif-wrap img{display:block; width:100%; height:auto; object-fit:cover; transition:all .45s ease}
+.gif-fallback{
+  display:flex; align-items:center; justify-content:center; gap:16px; height:260px;
+  background:linear-gradient(120deg,#0b122b,#101b35);
+  color:#ffd166; font-size:2.2rem; letter-spacing:.5px;
+}
+.gif-fallback .buddies{font-size:2.6rem; filter:drop-shadow(0 8px 24px rgba(0,0,0,.45))}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.buddies span{display:inline-block; animation:bob 3.4s ease-in-out infinite}
+.buddies span:nth-child(2){animation-delay:.15s}
+.buddies span:nth-child(3){animation-delay:.3s}
+.question{margin:10px 0 4px; font-size:1.5rem; font-weight:800}
+.subq{color:var(--muted)}
+.buttons{position:relative; height:120px; display:flex; align-items:center; justify-content:center; gap:20px; margin:16px 0}
+.btn{
+  padding:12px 22px; border:0; border-radius:14px; cursor:pointer; font-weight:800; font-size:1.05rem;
+  transition:transform .18s ease, box-shadow .18s ease; user-select:none;
+}
+.btn:active{transform:scale(.98)}
+.btn-yes{background:linear-gradient(135deg,var(--success),#059669); color:#fff; box-shadow:0 10px 26px rgba(16,185,129,.28)}
+.btn-yes:hover{transform:translateY(-3px) scale(1.02)}
+.btn-no{
+  background:linear-gradient(135deg,var(--danger),#dc2626); color:#fff; position:absolute;
+  left:60px; top:50px; box-shadow:0 10px 26px rgba(239,68,68,.24);
+}
+.hint{font-size:.92rem; color:var(--muted); margin-top:6px}
+.overlay{position:absolute; inset:0; pointer-events:none; z-index:5}
+.confetti{position:absolute; width:8px; height:6px; opacity:.95; transform:rotate(0deg); will-change:transform,opacity}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0deg); opacity:1}
+  100%{transform:translateY(520px) rotate(720deg); opacity:0}
+}
+.floatTxt{
+  position:absolute; left:50%; top:58%; transform:translate(-50%,-50%) scale(0);
+  font-size:2rem; font-weight:900; color:#f59e0b; text-shadow:2px 2px 10px rgba(0,0,0,.5);
+  animation:ft 2s ease-out forwards;
+}
+@keyframes ft{0%{opacity:0; transform:translate(-50%,-50%) scale(0)}
+30%{opacity:1; transform:translate(-50%,-50%) scale(1.18)}
+70%{opacity:1; transform:translate(-50%,-54%) scale(1)}
+100%{opacity:0; transform:translate(-50%,-60%) scale(.86)}}
+@media(max-width:560px){
+  .title{font-size:1.45rem} .question{font-size:1.25rem} .buttons{height:140px}
+  .btn{padding:11px 16px; font-size:.98rem}
+}
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="overlay" id="overlay"></div>
+
+    <div class="header">
+      <h1 class="title">🤝 Best Friends Quiz</h1>
+      <div class="sub"></div>
+    </div>
+
+    <div class="gif-wrap" id="gifWrap">
+      <img id="qGif" alt="Friends thinking"
+           src="https://media.giphy.com/media/l3vR85PnGsBwu1PFK/giphy.gif"
+           onerror="window.fallbackGif('qGif')" />
+      <img id="sGif" alt="Friends celebrating"
+           src="https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif"
+           style="display:none" onerror="window.fallbackGif('sGif', true)" />
+    </div>
+
+    <div class="question" id="q">क्या हम सबसे अच्छे दोस्त हैं? 🤔</div>
+    <div class="subq" id="sq">Are we really best friends forever?</div>
+
+    <div class="buttons" id="btnWrap">
+      <button class="btn btn-yes" id="yes">✨ हाँ Yes! ✨</button>
+      <button class="btn btn-no" id="no">❌ नहीं / No</button>
+    </div>
+
+    <div class="hint" id="hint">Try clicking <strong>No</strong> — देखते हैं क्या होता है! 😏</div>
+  </div>
+
+<script>
+/* ---------- GIF choices with fallback (friendship categories) ---------- */
+const QUESTION_GIFS = [
+  "https://media.giphy.com/media/l3vR85PnGsBwu1PFK/giphy.gif", // thinking vibe
+  "https://media.giphy.com/media/l1J9EdzfOSgfyueLm/giphy.gif"  // friends laughing
+];
+const SUCCESS_GIFS = [
+  "https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif", // group hug
+  "https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif", // confetti
+  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif"       // hi-five
+];
+
+/* ---------- Robust image fallback to animated placeholder ---------- */
+window.fallbackGif = function(id, isSuccess=false){
+  const img = document.getElementById(id);
+  if(!img) return;
+  const wrap = img.parentElement;
+  img.style.display = "none";
+  const box = document.createElement("div");
+  box.className = "gif-fallback";
+  if(!isSuccess){
+    box.innerHTML = '<div class="buddies"><span>🧑‍🤝‍🧑</span> <span>🤔</span> <span>🧑‍🤝‍🧑</span></div><div>Are we BFF?</div>';
+  }else{
+    box.innerHTML = '<div class="buddies"><span>🧑‍🤝‍🧑</span> <span>🎉</span> <span>🧑‍🤝‍🧑</span></div><div>BFF Forever!</div>';
+  }
+  wrap.appendChild(box);
+};
+
+/* ---------- Audio: unlock on first gesture (per autoplay policy) ---------- */
+let audioCtx = null, audioReady = false;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({latencyHint:"interactive"});
+  }
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume().catch(()=>{});
+  }
+  audioReady = true;
+}
+["pointerdown","touchstart","keydown","click"].forEach(ev=>{
+  window.addEventListener(ev, ensureAudio, {once:true, passive:true});
+});
+
+function tone(freq=520, dur=0.18, type="sine", vol=0.10, delay=0){
+  if(!audioCtx || !audioReady) return;
+  try{
+    const t0 = audioCtx.currentTime + delay;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }catch(e){}
+}
+function soundNo(){
+  tone(900, .12, "sine", .10, 0);
+  tone(420, .18, "triangle", .09, .06);
+}
+function soundYes(){
+  tone(523.25, .18, "sine", .10, 0);   // C5
+  tone(659.25, .20, "sine", .10, .14); // E5
+  tone(783.99, .22, "sine", .09, .30); // G5
+  tone(1046.5, .28, "sine", .09, .50); // C6
+  // sparkle
+  tone(1760, .12, "triangle", .06, .36);
+  tone(2217.46, .12, "triangle", .06, .46);
+  tone(2793.83, .12, "triangle", .06, .56);
+}
+
+/* ---------- UI logic ---------- */
+const els = {
+  qGif: document.getElementById("qGif"),
+  sGif: document.getElementById("sGif"),
+  q: document.getElementById("q"),
+  sq: document.getElementById("sq"),
+  yes: document.getElementById("yes"),
+  no: document.getElementById("no"),
+  btnWrap: document.getElementById("btnWrap"),
+  hint: document.getElementById("hint"),
+  overlay: document.getElementById("overlay")
+};
+
+let tries = 0, done = false;
+
+function centerNoInitially(){
+  const c = els.btnWrap.getBoundingClientRect();
+  const b = els.no.getBoundingClientRect();
+  const x = (c.width - b.width)/2 + c.width*0.15;
+  const y = (c.height - b.height)/2;
+  els.no.style.left = Math.max(8, x) + "px";
+  els.no.style.top  = Math.max(8, y) + "px";
+}
+function moveNo(){
+  if(done) return;
+  tries++;
+  const c = els.btnWrap.getBoundingClientRect();
+  const b = els.no.getBoundingClientRect();
+  const pad = 6;
+  const maxX = Math.max(c.width - b.width - pad, 0);
+  const maxY = Math.max(c.height - b.height - pad, 0);
+  let nx, ny;
+  if(tries > 4){
+    nx = Math.random() < .5 ? pad : maxX;
+    ny = pad + Math.random()*(maxY - pad);
+  }else{
+    nx = pad + Math.random()*maxX;
+    ny = pad + Math.random()*maxY;
+  }
+  els.no.style.left = Math.round(nx) + "px";
+  els.no.style.top  = Math.round(ny) + "px";
+  soundNo();
+  updateHint();
+  floatEmoji("😄", b.left + b.width/2, b.top + b.height/2);
+}
+function updateHint(){
+  const msgs = [
+    'Try clicking <strong>No</strong> — देखते हैं क्या होता है! 😏',
+    'Oops! Button भाग गया! 😂 Try again!',
+    'Still trying? 🤪 Friendship is strong!',
+    'Button पकड़ना आसान नहीं! 🏃‍♂️',
+    'Give up और <strong>Yes</strong> click करो! ✨',
+    'बस कर भी दो! We are BFFs! 😜'
+  ];
+  els.hint.innerHTML = msgs[Math.min(tries-1, msgs.length-1)];
+}
+
+function floatEmoji(e, x, y){
+  const d = document.createElement("div");
+  d.style.position="fixed"; d.style.left=x+"px"; d.style.top=y+"px";
+  d.style.transform="translate(-50%,-50%)"; d.style.fontSize="22px"; d.style.zIndex="6";
+  d.textContent = e;
+  document.body.appendChild(d);
+  d.animate([{transform:"translate(-50%,-50%) scale(1)", opacity:1},
+             {transform:"translate(-50%,-130%) scale(.8)", opacity:0}],
+            {duration:1200, easing:"ease-out"}).onfinish=()=>d.remove();
+}
+
+function celebrate(){
+  spawnConfetti();
+  addFloatText("BFF! 💕", 300);
+  addFloatText("✨", 1000);
+}
+function addFloatText(txt, delay=0){
+  setTimeout(()=>{
+    const t = document.createElement("div");
+    t.className="floatTxt"; t.textContent=txt;
+    els.overlay.appendChild(t);
+    setTimeout(()=>t.remove(), 2100);
+  }, delay);
+}
+function spawnConfetti(){
+  const colors = ["#f59e0b","#10b981","#3b82f6","#ef4444","#8b5cf6","#f97316","#06b6d4","#84cc16"];
+  const rect = els.btnWrap.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height*0.2;
+  for(let i=0;i<50;i++){
+    setTimeout(()=>{
+      const p = document.createElement("div");
+      p.className="confetti";
+      p.style.left = (cx + (Math.random()*160 - 80)) + "px";
+      p.style.top  = (cy + (Math.random()*40 - 20)) + "px";
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.animation = `fall ${2.6 + Math.random()*0.9}s ease-out forwards`;
+      p.style.transform = `rotate(${Math.random()*360}deg)`;
+      p.style.zIndex = 6;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(), 3500);
+    }, i*30);
+  }
+}
+
+function onYes(){
+  if(done) return;
+  done = true;
+  soundYes();
+  // swap GIFs
+  els.qGif.style.opacity = "0";
+  setTimeout(()=>{
+    els.qGif.style.display="none";
+    els.sGif.style.display="block";
+    els.sGif.style.opacity="0";
+    setTimeout(()=>{ els.sGif.style.opacity="1"; }, 40);
+  }, 300);
+  // texts
+  els.q.textContent = "🎉 I Knew it! 🎉";
+  els.sq.textContent = "Best Friends Forever!🤗";
+  // hide buttons/hint
+  els.btnWrap.style.opacity="0"; els.hint.style.opacity="0";
+  setTimeout(()=>{ els.btnWrap.style.display="none"; els.hint.style.display="none"; }, 320);
+  celebrate();
+}
+
+/* ---------- Events ---------- */
+window.addEventListener("DOMContentLoaded", ()=>{
+  // GIF randomization for variety
+  document.getElementById("qGif").src = QUESTION_GIFS[0];
+  document.getElementById("sGif").src = SUCCESS_GIFS[0];
+
+  centerNoInitially();
+
+  els.no.addEventListener("mouseenter", moveNo);
+  els.no.addEventListener("mousemove", moveNo);
+  els.no.addEventListener("touchstart", (e)=>{ e.preventDefault(); moveNo(); }, {passive:false});
+  els.no.addEventListener("click", (e)=>{ e.preventDefault(); moveNo(); });
+
+  document.addEventListener("mousemove", (e)=>{
+    if(done) return;
+    const r = els.no.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const d = Math.hypot(dx,dy);
+    if(d < 110) moveNo();
+  });
+
+  els.yes.addEventListener("click", onYes);
+
+  // subtle float animation for question gif
+  const gw = document.getElementById("gifWrap");
+  gw.animate([{transform:"translateY(0)"},{transform:"translateY(-6px)"},{transform:"translateY(0)"}],
+             {duration:4200, iterations:Infinity, easing:"ease-in-out"});
+});
+</script>
+</body>
+</html>
